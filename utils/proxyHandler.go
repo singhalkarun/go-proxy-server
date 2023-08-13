@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"syscall"
 )
 
 func ProxyHandler(location string, proxyUrl string) func(http.ResponseWriter, *http.Request) {
@@ -15,6 +17,8 @@ func ProxyHandler(location string, proxyUrl string) func(http.ResponseWriter, *h
 
 		if error != nil {
 			fmt.Println(error)
+			w.Write([]byte(error.Error()))
+			return
 		}
 
 		client := &http.Client{}
@@ -22,15 +26,22 @@ func ProxyHandler(location string, proxyUrl string) func(http.ResponseWriter, *h
 
 		if error != nil {
 			fmt.Println(error)
+			if errors.Is(error, syscall.ECONNREFUSED) {
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			} else {
+				w.Write([]byte(error.Error()))
+			}
+			return
 		}
 
 		responseBody, error := io.ReadAll(response.Body)
 
 		if error != nil {
 			fmt.Println(error)
+			w.Write([]byte(error.Error()))
+		} else {
+			w.Write(responseBody)
 		}
-
-		w.Write(responseBody)
 
 		defer response.Body.Close()
 	}

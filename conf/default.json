@@ -2,12 +2,13 @@
     "hostname":"localhost",
     "routes": [
         {
-            "location":"/api",
-            "proxy_url": "http://localhost:3001"
+            "location":"/api/",
+            "proxy_url": "http://localhost:3001/"
         },
+
         {
             "location":"/",
-            "proxy_url": "http://localhost:3000"
+            "proxy_url": "http://localhost:3000/"
         }
     ]
 }
