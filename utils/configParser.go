@@ -7,9 +7,14 @@ import (
 	"os"
 )
 
-type Config struct {
+type Route struct {
 	Location string `json:"location"`
 	ProxyUrl string `json:"proxy_url"`
+}
+
+type Config struct {
+	Routes   []Route `json:"routes"`
+	Hostname string  `json:"hostname"`
 }
 
 func ReadFile(location string) []byte {

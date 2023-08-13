@@ -2,36 +2,33 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"net/http"
 
+	"github.com/gorilla/mux"
 	"singhalkarun.github.io/proxy-server/utils"
 )
 
 func main() {
-	confDirectoryLocation := "conf"
+	configs := utils.ReadConfig()
 
-	var configs []utils.Config
+	r := mux.NewRouter()
 
-	files, err := ioutil.ReadDir(confDirectoryLocation)
+	for i := 0; i < len(configs); i++ {
+		s := r.Host(configs[i].Hostname).Subrouter()
+
+		routes := configs[i].Routes
+
+		for j := 0; j < len(routes); j++ {
+			s.PathPrefix(routes[j].Location).HandlerFunc(utils.ProxyHandler(routes[j].Location, routes[j].ProxyUrl))
+		}
+	}
+
+	http.Handle("/", r)
+
+	err := http.ListenAndServe(":80", nil)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	for _, file := range files {
-		if !file.IsDir() {
-			config := utils.ConfigParser(confDirectoryLocation + "/" + file.Name())
-
-			configs = append(configs, config)
-		}
-	}
-
-	for i := 0; i < len(configs); i++ {
-		fmt.Println("Proxy Block: " + fmt.Sprint(i))
-
-		fmt.Println("Location: " + configs[i].Location)
-		fmt.Println("Proxy URL " + configs[i].ProxyUrl)
-
-		fmt.Println("")
-	}
 }
